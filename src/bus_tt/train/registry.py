@@ -11,6 +11,7 @@ from bus_tt.losses.focal import FocalLoss
 MODEL_REGISTRY: dict[str, type] = {
     "ann": ANNModel,
     "pinn": PINN,
+    "lstm": PhyLSTMModel,
     "phylstm": PhyLSTMModel,
 }
 

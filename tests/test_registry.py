@@ -17,7 +17,7 @@ from bus_tt.losses.focal import FocalLoss
 
 class TestModelRegistry:
     def test_all_keys_present(self):
-        assert set(MODEL_REGISTRY.keys()) == {"ann", "pinn", "phylstm"}
+        assert set(MODEL_REGISTRY.keys()) == {"ann", "pinn", "lstm", "phylstm"}
 
     def test_build_ann(self):
         m = build_model("ann", input_dim=6, hidden_dims=[64])
@@ -29,6 +29,10 @@ class TestModelRegistry:
 
     def test_build_phylstm(self):
         m = build_model("phylstm", hidden_dim=32)
+        assert isinstance(m, PhyLSTMModel)
+
+    def test_build_lstm(self):
+        m = build_model("lstm", hidden_dim=32)
         assert isinstance(m, PhyLSTMModel)
 
     def test_unknown_model_raises(self):

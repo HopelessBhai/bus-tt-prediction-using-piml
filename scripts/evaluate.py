@@ -58,7 +58,7 @@ def main():
             preds = model(x_test).cpu().numpy().flatten()
         y_true_speed = samples["y_speed"][te]
 
-    elif model_type == "phylstm":
+    elif model_type in ("phylstm", "lstm"):
         model = build_model(model_type, **cfg["model"]["params"]).to(device)
         model.load_state_dict(torch.load(args.checkpoint, map_location=device))
         model.eval()

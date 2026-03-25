@@ -57,12 +57,19 @@ def main():
             samples["X_xgb"][~tr], samples["y_speed"][~tr],
             n_trials=n_trials,
         )
-    elif model_type == "phylstm":
+    elif model_type in ("phylstm", "lstm"):
         def make_train(bs):
             return DataLoader(SeqCtxDataset(samples["X_seq"][tr], samples["X_ctx"][tr], samples["y_speed"][tr]), batch_size=bs, shuffle=True)
         def make_val(bs):
             return DataLoader(SeqCtxDataset(samples["X_seq"][~tr], samples["X_ctx"][~tr], samples["y_speed"][~tr]), batch_size=bs)
-        study = tune_seq(make_train, make_val, n_trials=n_trials, device=device)
+        study = tune_seq(
+            make_train,
+            make_val,
+            model_name=model_type,
+            n_trials=n_trials,
+            device=device,
+            use_physics=(model_type == "phylstm"),
+        )
     elif model_type in ("ann", "pinn"):
         def make_train(bs):
             return DataLoader(TabularDataset(samples["X_xgb"][tr], samples["y_speed"][tr]), batch_size=bs, shuffle=True)

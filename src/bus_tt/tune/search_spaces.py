@@ -14,6 +14,16 @@ def phylstm_space(trial: optuna.Trial) -> dict:
     }
 
 
+def lstm_space(trial: optuna.Trial) -> dict:
+    return {
+        "hidden_dim": trial.suggest_categorical("hidden_dim", [32, 64, 128]),
+        "dropout": trial.suggest_float("dropout", 0.1, 0.4, step=0.05),
+        "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True),
+        "batch_size": trial.suggest_categorical("batch_size", [128, 256, 512]),
+        "weight_decay": trial.suggest_float("weight_decay", 1e-6, 1e-3, log=True),
+    }
+
+
 def ann_space(trial: optuna.Trial) -> dict:
     n_layers = trial.suggest_int("n_layers", 1, 3)
     dims = [trial.suggest_categorical(f"dim_{i}", [64, 128, 256]) for i in range(n_layers)]
@@ -48,6 +58,7 @@ def xgb_space(trial: optuna.Trial) -> dict:
 
 SPACE_REGISTRY = {
     "phylstm": phylstm_space,
+    "lstm": lstm_space,
     "ann": ann_space,
     "pinn": pinn_space,
     "xgb": xgb_space,

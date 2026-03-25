@@ -1,0 +1,17 @@
+data_path: data/sample/sample_bus_travel_times.csv
+seed: 42
+device: cuda
+
+model:
+  type: lstm
+  params:
+    hidden_dim: 64
+    dropout: 0.2
+
+training:
+  lr: 0.005
+  batch_size: 256
+  max_epochs: 150
+  patience: 20
+
+output_dir: outputs/models

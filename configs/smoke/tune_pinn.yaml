@@ -1,0 +1,9 @@
+data_path: data/sample/sample_bus_travel_times_smoke.csv
+seed: 42
+device: cpu
+n_trials: 1
+
+model:
+  type: pinn
+
+output_dir: outputs/smoke/tuning

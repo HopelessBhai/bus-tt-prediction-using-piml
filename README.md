@@ -8,6 +8,7 @@ Physics-informed hybrid models for urban bus travel time prediction on 100m road
 |-------|------|-------------|
 | **ANN** | Tabular NN | Feedforward network with BatchNorm + Dropout |
 | **PINN** | Tabular NN | Physics-Informed NN with LWR PDE residual loss |
+| **LSTM** | Sequential | LSTM + context features, trained with MSE only |
 | **Phy-LSTM** | Sequential | LSTM + context features + physics loss |
 | **XGBoost** | Gradient boosting | Tabular features, fast inference |
 | **Hybrid** | Adaptive routing | Routes to XGBoost (congested) or Phy-LSTM (normal) based on previous trip travel time |
@@ -27,7 +28,7 @@ bus-tt-prediction/
 │   └── utils/                # Seed, paths, logging
 ├── scripts/                  # CLI entry points: train, tune, evaluate, latency_check
 ├── configs/                  # YAML configs for training and tuning
-│   ├── train/                # One YAML per model (ann, pinn, phylstm, xgb)
+│   ├── train/                # One YAML per model (ann, pinn, lstm, phylstm, xgb)
 │   └── tune/                 # One YAML per model
 ├── data/sample/              # Small sample dataset for testing the pipeline
 └── outputs/                  # Generated artifacts (models, predictions, reports)
@@ -68,7 +69,7 @@ All training and tuning is driven by YAML configs in `configs/`. Key fields:
 ```yaml
 data_path: data/sample/sample_bus_travel_times.csv
 model:
-  type: phylstm          # ann | pinn | phylstm | xgb
+  type: phylstm          # ann | pinn | lstm | phylstm | xgb
   params:
     hidden_dim: 64
     dropout: 0.2

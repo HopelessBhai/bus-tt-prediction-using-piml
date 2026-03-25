@@ -106,8 +106,9 @@ def train_seq(
     patience: int = 20,
     device: torch.device | str = "cpu",
     save_path: str | Path | None = None,
+    use_physics: bool = True,
 ) -> dict:
-    """Train PhyLSTM (or plain LSTM). DataLoader yields (x_seq, x_ctx, y)."""
+    """Train PhyLSTM/LSTM. DataLoader yields (x_seq, x_ctx, y)."""
     device = torch.device(device) if isinstance(device, str) else device
     model = model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -125,7 +126,10 @@ def train_seq(
             optimizer.zero_grad()
             with autocast():
                 pred = model(x_seq, x_ctx)
-                loss = criterion(x_ctx, y, pred)
+                if use_physics:
+                    loss = criterion(x_ctx, y, pred)
+                else:
+                    loss = criterion(pred, y)
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()

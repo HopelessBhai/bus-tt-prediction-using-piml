@@ -85,7 +85,7 @@ def main():
         )
         log.info(f"{model_type} best val loss: {result['best_val']:.6f}")
 
-    elif model_type == "phylstm":
+    elif model_type in ("phylstm", "lstm"):
         bs = cfg["training"].get("batch_size", 256)
         train_ds = SeqCtxDataset(samples["X_seq"][tr], samples["X_ctx"][tr], samples["y_speed"][tr])
         val_ds = SeqCtxDataset(samples["X_seq"][~tr], samples["X_ctx"][~tr], samples["y_speed"][~tr])
@@ -93,8 +93,10 @@ def main():
         val_loader = DataLoader(val_ds, batch_size=bs)
 
         model = build_model(model_type, **cfg["model"]["params"])
+        use_physics = model_type == "phylstm"
         loss_kw = {k: v for k, v in cfg.get("loss", {}).items() if k != "type"}
-        criterion = build_loss(cfg.get("loss", {}).get("type", "physics"), **loss_kw)
+        loss_name = "physics" if use_physics else "mse"
+        criterion = build_loss(cfg.get("loss", {}).get("type", loss_name), **loss_kw)
 
         result = train_seq(
             model, train_loader, val_loader, criterion,
@@ -102,9 +104,10 @@ def main():
             max_epochs=cfg["training"].get("max_epochs", 150),
             patience=cfg["training"].get("patience", 20),
             device=device,
-            save_path=save_dir / "phylstm.pth",
+            save_path=save_dir / f"{model_type}.pth",
+            use_physics=use_physics,
         )
-        log.info(f"PhyLSTM best val loss: {result['best_val']:.6f}")
+        log.info(f"{model_type.upper()} best val loss: {result['best_val']:.6f}")
 
     else:
         raise ValueError(f"Unknown model type: {model_type}")

@@ -4,6 +4,7 @@ import optuna
 
 from bus_tt.tune.search_spaces import (
     phylstm_space,
+    lstm_space,
     ann_space,
     pinn_space,
     xgb_space,
@@ -18,7 +19,7 @@ def _trial():
 
 class TestSpaceRegistry:
     def test_all_keys(self):
-        assert set(SPACE_REGISTRY.keys()) == {"phylstm", "ann", "pinn", "xgb"}
+        assert set(SPACE_REGISTRY.keys()) == {"phylstm", "lstm", "ann", "pinn", "xgb"}
 
 
 class TestPhylstmSpace:
@@ -34,6 +35,17 @@ class TestPhylstmSpace:
     def test_hidden_dim_values(self):
         hp = phylstm_space(_trial())
         assert hp["hidden_dim"] in [32, 64, 128]
+
+
+class TestLstmSpace:
+    def test_returns_dict(self):
+        hp = lstm_space(_trial())
+        assert isinstance(hp, dict)
+
+    def test_required_keys(self):
+        hp = lstm_space(_trial())
+        for k in ("hidden_dim", "dropout", "lr", "batch_size", "weight_decay"):
+            assert k in hp
 
 
 class TestAnnSpace:

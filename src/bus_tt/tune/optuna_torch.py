@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from bus_tt.train.registry import build_model, build_loss
 from bus_tt.train.train_torch import train_tabular, train_seq
 from bus_tt.tune.search_spaces import SPACE_REGISTRY
+from bus_tt.constants import OUTPUT_DIM
 from bus_tt.utils.logging import get_logger
 
 log = get_logger(__name__)
@@ -37,7 +38,10 @@ def tune_tabular(
         lr = hp.pop("lr")
         phy_lambda = hp.pop("phy_lambda", None)
 
-        model = build_model(model_name, input_dim=input_dim, **hp)
+        model_kw = {"input_dim": input_dim, **hp}
+        if model_name == "pinn":
+            model_kw["output_dim"] = OUTPUT_DIM
+        model = build_model(model_name, **model_kw)
         loss_name = "physics" if use_physics else "mse"
         loss_kw = {"phy_lambda": phy_lambda} if phy_lambda else {}
         criterion = build_loss(loss_name, **loss_kw)
@@ -64,21 +68,25 @@ def tune_seq(
     train_loader_fn,
     val_loader_fn,
     *,
+    model_name: str = "phylstm",
     n_trials: int = 50,
     max_epochs: int = 80,
     device: str = "cpu",
+    use_physics: bool = True,
 ) -> optuna.Study:
-    space_fn = SPACE_REGISTRY["phylstm"]
+    space_fn = SPACE_REGISTRY[model_name]
 
     def objective(trial: optuna.Trial) -> float:
         hp = space_fn(trial)
         bs = hp.pop("batch_size", 256)
         lr = hp.pop("lr")
-        phy_lambda = hp.pop("phy_lambda")
+        phy_lambda = hp.pop("phy_lambda", None)
         wd = hp.pop("weight_decay", 1e-4)
 
-        model = build_model("phylstm", **hp)
-        criterion = build_loss("physics", phy_lambda=phy_lambda)
+        model = build_model(model_name, **hp)
+        loss_name = "physics" if use_physics else "mse"
+        loss_kw = {"phy_lambda": phy_lambda} if phy_lambda is not None else {}
+        criterion = build_loss(loss_name, **loss_kw)
 
         result = train_seq(
             model,
@@ -89,10 +97,11 @@ def tune_seq(
             weight_decay=wd,
             max_epochs=max_epochs,
             device=device,
+            use_physics=use_physics,
         )
         return result["best_val"]
 
     study = optuna.create_study(direction="minimize")
     study.optimize(objective, n_trials=n_trials)
-    log.info(f"Best phylstm trial: {study.best_trial.value:.6f} params={study.best_trial.params}")
+    log.info(f"Best {model_name} trial: {study.best_trial.value:.6f} params={study.best_trial.params}")
     return study

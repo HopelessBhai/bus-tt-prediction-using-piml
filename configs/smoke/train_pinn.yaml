@@ -1,0 +1,22 @@
+data_path: data/sample/sample_bus_travel_times_smoke.csv
+seed: 42
+device: cpu
+
+model:
+  type: pinn
+  params:
+    input_dim: 6
+    output_dim: 1
+    layer_dims: [32, 16]
+
+loss:
+  type: physics
+  phy_lambda: 0.14
+
+training:
+  lr: 0.001
+  batch_size: 16
+  max_epochs: 3
+  patience: 2
+
+output_dir: outputs/smoke/models

@@ -76,6 +76,16 @@ class TestTrainTabular:
 
 
 class TestTrainSeq:
+    def test_lstm_trains_without_physics(self):
+        tl, vl = _make_seq_loaders()
+        model = PhyLSTMModel(hidden_dim=16, dropout=0.1)
+        result = train_seq(
+            model, tl, vl, torch.nn.MSELoss(),
+            lr=0.01, max_epochs=3, patience=5, device="cpu",
+            use_physics=False,
+        )
+        assert result["best_val"] < float("inf")
+
     def test_phylstm_trains(self):
         tl, vl = _make_seq_loaders()
         model = PhyLSTMModel(hidden_dim=16, dropout=0.1)
@@ -83,6 +93,7 @@ class TestTrainSeq:
         result = train_seq(
             model, tl, vl, criterion,
             lr=0.01, max_epochs=3, patience=5, device="cpu",
+            use_physics=True,
         )
         assert result["best_val"] < float("inf")
 
@@ -95,6 +106,7 @@ class TestTrainSeq:
             model, tl, vl, criterion,
             lr=0.01, max_epochs=3, patience=5, device="cpu",
             save_path=save_path,
+            use_physics=True,
         )
         assert save_path.exists()
 
