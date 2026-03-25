@@ -1,0 +1,22 @@
+data_path: data/sample/sample_bus_travel_times.csv
+seed: 42
+device: cuda
+
+model:
+  type: pinn
+  params:
+    input_dim: 6
+    output_dim: 1
+    layer_dims: [128, 64]
+
+loss:
+  type: physics
+  phy_lambda: 0.14
+
+training:
+  lr: 0.001
+  batch_size: 256
+  max_epochs: 100
+  patience: 15
+
+output_dir: outputs/models

@@ -1,0 +1,8 @@
+data_path: data/sample/sample_bus_travel_times.csv
+seed: 42
+n_trials: 50
+
+model:
+  type: xgb
+
+output_dir: outputs/tuning

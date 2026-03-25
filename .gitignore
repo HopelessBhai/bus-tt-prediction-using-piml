@@ -1,0 +1,35 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Outputs
+outputs/models/*.pth
+outputs/models/*.json
+outputs/predictions/
+outputs/reports/
+outputs/tuning/
+
+# Data (keep sample only)
+data/*.csv
+!data/sample/
+
+# Environment
+.venv/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/

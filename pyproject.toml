@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bus-tt-prediction"
+version = "0.1.0"
+description = "Physics-informed hybrid models for bus travel time prediction"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "torch",
+    "xgboost",
+    "scikit-learn",
+    "optuna",
+    "pyyaml",
+    "matplotlib",
+    "seaborn",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "ipykernel"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

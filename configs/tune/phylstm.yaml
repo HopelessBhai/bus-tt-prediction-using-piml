@@ -1,0 +1,9 @@
+data_path: data/sample/sample_bus_travel_times.csv
+seed: 42
+device: cuda
+n_trials: 50
+
+model:
+  type: phylstm
+
+output_dir: outputs/tuning
