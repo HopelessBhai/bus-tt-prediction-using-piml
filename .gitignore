@@ -33,3 +33,6 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Local manuscript PDFs (do not commit)
+bus_tt_paper_els_soft_computing_28mar.pdf

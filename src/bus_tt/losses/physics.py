@@ -9,7 +9,15 @@ def _safe_log(x: torch.Tensor) -> torch.Tensor:
 
 
 def pde_residual(v_curr: torch.Tensor, v_prev: torch.Tensor, dx: float = 100.0) -> torch.Tensor:
-    """Aw-Rascle-inspired PDE residual surrogate: dv/dt + dF(v)/dx."""
+    """Aw-Rascle velocity-form residual surrogate: dv/dt + dF(v)/dx.
+
+    Uses:
+        F(v) = (v^2 / 2) * (0.5 + ln(v / v_f))
+
+    Reference for the velocity-form adaptation used here:
+        Bharathi et al., Physica A 596 (2022), 127086.
+        https://doi.org/10.1016/j.physa.2022.127086
+    """
     v_curr_safe = torch.maximum(v_curr, torch.tensor(1e-5, device=v_curr.device))
     v_prev_safe = torch.maximum(v_prev, torch.tensor(1e-5, device=v_prev.device))
 

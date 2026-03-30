@@ -84,21 +84,29 @@ training:
 
 ## Physics Loss
 
-The physics-informed loss is based on the Aw-Rascle second-order traffic flow formulation:
+The physics-informed loss follows the Aw-Rascle traffic formulation used in the paper:
 
 ```
-∂tρ + ∂x(ρv) = 0
-∂t(ρw) + ∂x(ρvw) = 0,  where w = v + p(ρ)
+∂k/∂t + ∂(kv)/∂x = 0
+∂(v + p(k))/∂t + v ∂(v + p(k))/∂x = 0
 ```
 
-In this implementation, the regularization uses a speed-based residual surrogate:
+The implementation then uses the velocity-form adaptation from the same paper:
+
+```
+∂v/∂t + ∂F(v)/∂x = 0
+F(v) = (v^2 / 2) * (0.5 + ln(v / v_f))
+```
+
+In training, we use this PDE residual as a physics regularizer:
 
 ```
 L = L_data + λ · mean(R²)
 ```
 
-where `R = dv/dt + dF(v)/dx`.
+where `R = ∂v/∂t + ∂F(v)/∂x`.
 
 ### Reference
 
 - A. Aw and M. Rascle, *Resurrection of "Second Order" Models of Traffic Flow*, SIAM Journal on Applied Mathematics, 60(3), 916-938 (2000). DOI: [10.1137/S0036139997332099](https://doi.org/10.1137/S0036139997332099)
+- D. Bharathi, L. Vanajakshi, S. C. Subramanian, *Spatio-temporal modelling and prediction of bus travel time using a higher-order traffic flow model*, Physica A: Statistical Mechanics and its Applications, 596, 127086 (2022). DOI: [10.1016/j.physa.2022.127086](https://doi.org/10.1016/j.physa.2022.127086)
