@@ -7,7 +7,7 @@ Physics-informed hybrid models for urban bus travel time prediction on 100m road
 | Model | Type | Description |
 |-------|------|-------------|
 | **ANN** | Tabular NN | Feedforward network with BatchNorm + Dropout |
-| **PINN** | Tabular NN | Physics-Informed NN with LWR PDE residual loss |
+| **PINN** | Tabular NN | Physics-Informed NN with Aw-Rascle PDE residual loss |
 | **LSTM** | Sequential | LSTM + context features, trained with MSE only |
 | **Phy-LSTM** | Sequential | LSTM + context features + physics loss |
 | **XGBoost** | Gradient boosting | Tabular features, fast inference |
@@ -21,7 +21,7 @@ bus-tt-prediction/
 │   ├── constants.py          # Shared constants (section length, test dates, etc.)
 │   ├── data/                 # Data loading, splitting, feature engineering, datasets
 │   ├── models/               # ANN, PINN, LSTM/PhyLSTM, XGBoost, Hybrid router
-│   ├── losses/               # PhysicsLoss (LWR PDE), FocalLoss
+│   ├── losses/               # PhysicsLoss (Aw-Rascle PDE), FocalLoss
 │   ├── train/                # Training loops (PyTorch + XGBoost) + model/loss registry
 │   ├── tune/                 # Optuna search spaces + tuning drivers
 │   ├── eval/                 # Metrics, multi-model comparison, latency benchmarking
@@ -84,10 +84,21 @@ training:
 
 ## Physics Loss
 
-The physics-informed loss adds a PDE residual term from the LWR traffic flow model:
+The physics-informed loss is based on the Aw-Rascle second-order traffic flow formulation:
+
+```
+∂tρ + ∂x(ρv) = 0
+∂t(ρw) + ∂x(ρvw) = 0,  where w = v + p(ρ)
+```
+
+In this implementation, the regularization uses a speed-based residual surrogate:
 
 ```
 L = L_data + λ · mean(R²)
 ```
 
-where `R = dv/dt + dF(v)/dx` is the Greenshields flux conservation residual.
+where `R = dv/dt + dF(v)/dx`.
+
+### Reference
+
+- A. Aw and M. Rascle, *Resurrection of "Second Order" Models of Traffic Flow*, SIAM Journal on Applied Mathematics, 60(3), 916-938 (2000). DOI: [10.1137/S0036139997332099](https://doi.org/10.1137/S0036139997332099)

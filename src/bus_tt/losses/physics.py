@@ -9,7 +9,7 @@ def _safe_log(x: torch.Tensor) -> torch.Tensor:
 
 
 def pde_residual(v_curr: torch.Tensor, v_prev: torch.Tensor, dx: float = 100.0) -> torch.Tensor:
-    """LWR-based PDE residual: dv/dt + dF(v)/dx."""
+    """Aw-Rascle-inspired PDE residual surrogate: dv/dt + dF(v)/dx."""
     v_curr_safe = torch.maximum(v_curr, torch.tensor(1e-5, device=v_curr.device))
     v_prev_safe = torch.maximum(v_prev, torch.tensor(1e-5, device=v_prev.device))
 
