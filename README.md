@@ -1,37 +1,52 @@
 # Bus Travel Time Prediction
 
-Physics-informed hybrid models for urban bus travel time prediction on 100m road sections.
+Physics-informed and adaptive machine learning for bus travel time prediction on 100m road sections.
 
-## Models
+![Methodology Overview](report_pics/methodology_fig.png)
+
+## Highlights
+
+- Physics-informed learning with Aw-Rascle PDE regularization.
+- Unified framework for ANN, PINN, LSTM, Phy-LSTM, and XGBoost.
+- Adaptive generalist-specialist routing for peak-delay handling.
+- Config-driven train/tune/evaluate workflow.
+
+## Why This Project
+
+- Predict section-level bus travel time under highly dynamic urban traffic.
+- Compare pure data-driven, pure physics, and physics-informed models.
+- Solve rare peak-delay underprediction using an adaptive generalist-specialist architecture.
+
+## Model Stack
 
 | Model | Type | Description |
 |-------|------|-------------|
 | **ANN** | Tabular NN | Feedforward network with BatchNorm + Dropout |
-| **PINN** | Tabular NN | Physics-Informed NN with Aw-Rascle PDE residual loss |
+| **PINN** | Tabular NN | Physics-informed NN with Aw-Rascle residual regularization |
 | **LSTM** | Sequential | LSTM + context features, trained with MSE only |
-| **Phy-LSTM** | Sequential | LSTM + context features + physics loss |
-| **XGBoost** | Gradient boosting | Tabular features, fast inference |
-| **Hybrid** | Adaptive routing | Routes to XGBoost (congested) or Phy-LSTM (normal) based on previous trip travel time |
+| **Phy-LSTM** | Sequential | LSTM + context features + physics residual |
+| **XGBoost** | Gradient boosting | Tabular specialist model for hard peak regimes |
+| **Adaptive Hybrid** | Routing framework | Uses Phy-LSTM by default and switches to XGBoost on peak-triggered sections |
 
-## Repository Structure
+## Adaptive Architecture
 
-```
+![Adaptive Generalist-Specialist Architecture](report_pics/adaptive_arch.png)
+
+## Project Layout
+
+```text
 bus-tt-prediction/
+├── configs/                  # Train/tune YAMLs
+├── data/sample/              # Sample datasets
+├── scripts/                  # train.py, tune.py, evaluate.py, latency_check.py
 ├── src/bus_tt/
-│   ├── constants.py          # Shared constants (section length, test dates, etc.)
-│   ├── data/                 # Data loading, splitting, feature engineering, datasets
-│   ├── models/               # ANN, PINN, LSTM/PhyLSTM, XGBoost, Hybrid router
-│   ├── losses/               # PhysicsLoss (Aw-Rascle PDE), FocalLoss
-│   ├── train/                # Training loops (PyTorch + XGBoost) + model/loss registry
-│   ├── tune/                 # Optuna search spaces + tuning drivers
-│   ├── eval/                 # Metrics, multi-model comparison, latency benchmarking
-│   └── utils/                # Seed, paths, logging
-├── scripts/                  # CLI entry points: train, tune, evaluate, latency_check
-├── configs/                  # YAML configs for training and tuning
-│   ├── train/                # One YAML per model (ann, pinn, lstm, phylstm, xgb)
-│   └── tune/                 # One YAML per model
-├── data/sample/              # Small sample dataset for testing the pipeline
-└── outputs/                  # Generated artifacts (models, predictions, reports)
+│   ├── data/                 # IO, features, splits, dataset wrappers
+│   ├── models/               # ANN, PINN, LSTM/Phy-LSTM, XGBoost, hybrid router
+│   ├── losses/               # Physics and focal loss
+│   ├── train/                # Training loops + registry
+│   ├── tune/                 # Optuna tuning and search spaces
+│   └── eval/                 # Metrics, comparisons, latency
+└── README.md
 ```
 
 ## Quick Start
@@ -53,18 +68,9 @@ python scripts/evaluate.py --config configs/train/phylstm.yaml --checkpoint outp
 python scripts/latency_check.py --data data/sample/sample_bus_travel_times.csv
 ```
 
-## Data
-
-Place your dataset CSV at `data/sample/sample_bus_travel_times.csv`. The expected format has columns:
-- `Date` — trip date
-- `Start time of the trip` — departure time (HH:MM or HH:MM:SS)
-- `Section 1` through `Section N` — travel time (seconds) per 100m section
-
-A small synthetic sample is provided in `data/sample/` to verify the pipeline runs end-to-end without the full dataset.
-
 ## Configuration
 
-All training and tuning is driven by YAML configs in `configs/`. Key fields:
+All training and tuning are YAML-driven under `configs/`.
 
 ```yaml
 data_path: data/sample/sample_bus_travel_times.csv
@@ -82,31 +88,34 @@ training:
   max_epochs: 150
 ```
 
-## Physics Loss
+## Physics Formulation Used
 
-The physics-informed loss follows the Aw-Rascle traffic formulation used in the paper:
+Aw-Rascle traffic model:
 
 ```
 ∂k/∂t + ∂(kv)/∂x = 0
 ∂(v + p(k))/∂t + v ∂(v + p(k))/∂x = 0
 ```
 
-The implementation then uses the velocity-form adaptation from the same paper:
+Velocity-form adaptation used in implementation:
 
 ```
 ∂v/∂t + ∂F(v)/∂x = 0
 F(v) = (v^2 / 2) * (0.5 + ln(v / v_f))
 ```
 
-In training, we use this PDE residual as a physics regularizer:
+Training objective:
 
 ```
-L = L_data + λ · mean(R²)
+L = L_data + λ · mean(R²),  where R = ∂v/∂t + ∂F(v)/∂x
 ```
 
-where `R = ∂v/∂t + ∂F(v)/∂x`.
+## Notes
 
-### Reference
+- Use `configs/smoke/` for quick CPU-friendly pipeline checks.
+- Use `configs/train/` and `configs/tune/` for full runs.
+
+## References
 
 - A. Aw and M. Rascle, *Resurrection of "Second Order" Models of Traffic Flow*, SIAM Journal on Applied Mathematics, 60(3), 916-938 (2000). DOI: [10.1137/S0036139997332099](https://doi.org/10.1137/S0036139997332099)
 - D. Bharathi, L. Vanajakshi, S. C. Subramanian, *Spatio-temporal modelling and prediction of bus travel time using a higher-order traffic flow model*, Physica A: Statistical Mechanics and its Applications, 596, 127086 (2022). DOI: [10.1016/j.physa.2022.127086](https://doi.org/10.1016/j.physa.2022.127086)
